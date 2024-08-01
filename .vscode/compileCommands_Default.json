@@ -1,0 +1,74 @@
+[
+	{
+		"file": "C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\Source\\GhostRun\\GhostRun.Build.cs",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\Hostx64\\x64\\cl.exe",
+			"@C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\.vscode\\compileCommands_Default\\GhostRun.1.rsp"
+		],
+		"directory": "D:\\Epic Games\\UE_5.4\\Engine\\Source"
+	},
+	{
+		"file": "C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\Source\\GhostRun\\GhostRun.cpp",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\Hostx64\\x64\\cl.exe",
+			"@C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\.vscode\\compileCommands_Default\\GhostRun.1.rsp"
+		],
+		"directory": "D:\\Epic Games\\UE_5.4\\Engine\\Source"
+	},
+	{
+		"file": "C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\Source\\GhostRun\\GhostRun.h",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\Hostx64\\x64\\cl.exe",
+			"@C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\.vscode\\compileCommands_Default\\GhostRun.1.rsp"
+		],
+		"directory": "D:\\Epic Games\\UE_5.4\\Engine\\Source"
+	},
+	{
+		"file": "C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\Source\\GhostRun\\GhostRunCharacter.cpp",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\Hostx64\\x64\\cl.exe",
+			"@C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\.vscode\\compileCommands_Default\\GhostRun.1.rsp"
+		],
+		"directory": "D:\\Epic Games\\UE_5.4\\Engine\\Source"
+	},
+	{
+		"file": "C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\Source\\GhostRun\\GhostRunCharacter.h",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\Hostx64\\x64\\cl.exe",
+			"@C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\.vscode\\compileCommands_Default\\GhostRun.1.rsp"
+		],
+		"directory": "D:\\Epic Games\\UE_5.4\\Engine\\Source"
+	},
+	{
+		"file": "C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\Source\\GhostRun\\GhostRunGameMode.cpp",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\Hostx64\\x64\\cl.exe",
+			"@C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\.vscode\\compileCommands_Default\\GhostRun.1.rsp"
+		],
+		"directory": "D:\\Epic Games\\UE_5.4\\Engine\\Source"
+	},
+	{
+		"file": "C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\Source\\GhostRun\\GhostRunGameMode.h",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\Hostx64\\x64\\cl.exe",
+			"@C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\.vscode\\compileCommands_Default\\GhostRun.1.rsp"
+		],
+		"directory": "D:\\Epic Games\\UE_5.4\\Engine\\Source"
+	},
+	{
+		"file": "C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\Source\\GhostRun\\MrMightyBean.cpp",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\Hostx64\\x64\\cl.exe",
+			"@C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\.vscode\\compileCommands_Default\\GhostRun.1.rsp"
+		],
+		"directory": "D:\\Epic Games\\UE_5.4\\Engine\\Source"
+	},
+	{
+		"file": "C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\Source\\GhostRun\\MrMightyBean.h",
+		"arguments": [
+			"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\Hostx64\\x64\\cl.exe",
+			"@C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\.vscode\\compileCommands_Default\\GhostRun.1.rsp"
+		],
+		"directory": "D:\\Epic Games\\UE_5.4\\Engine\\Source"
+	}
+]
