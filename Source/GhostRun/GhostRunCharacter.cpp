@@ -42,13 +42,21 @@ AGhostRunCharacter::AGhostRunCharacter()
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 400.0f; // The camera follows at this distance behind the character	
+	CameraBoom->TargetArmLength = 500.0f; // The camera follows at this distance behind the character	
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+
+	// Configure for dashes
+	canDash = true;
+	timerComplete = true;
+	hasContactedFloorSinceLastDash = true;
+
+	//Configure Tick
+	PrimaryActorTick.bCanEverTick = true;
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
@@ -58,6 +66,13 @@ void AGhostRunCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+}
+
+void AGhostRunCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	CheckHasContactedFloorSinceLastDash();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -86,6 +101,9 @@ void AGhostRunCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGhostRunCharacter::Look);
+
+		// Dashing
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AGhostRunCharacter::Dash);
 	}
 	else
 	{
@@ -105,26 +123,63 @@ void AGhostRunCharacter::Move(const FInputActionValue& Value)
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
 		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		//const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	
 		// get right vector 
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
 		// add movement 
-		AddMovementInput(ForwardDirection, MovementVector.Y);
+		//AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
 	}
 }
 
+//Look disabled to keep static camera
 void AGhostRunCharacter::Look(const FInputActionValue& Value)
 {
 	// input is a Vector2D
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
+	// FVector2D LookAxisVector = Value.Get<FVector2D>();
 
-	if (Controller != nullptr)
+	// if (Controller != nullptr)
+	// {
+	// 	// add yaw and pitch input to controller
+	// 	AddControllerYawInput(LookAxisVector.X);
+	// 	AddControllerPitchInput(LookAxisVector.Y);
+	// }
+}
+
+void AGhostRunCharacter::Dash(const FInputActionValue& Value)
+{
+	UE_LOG(LogTemp, Display, TEXT("Dash button pressed"));
+	UE_LOG(LogTemp, Display, TEXT("Timer Complete: %d, Contacted floor: %d"), timerComplete, hasContactedFloorSinceLastDash);
+	if(timerComplete && hasContactedFloorSinceLastDash)
 	{
-		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
+		UE_LOG(LogTemp, Display, TEXT("If statement passed"));
+		//Add dash movement to character
+		FVector forwardDir = GetVelocity();
+		forwardDir.X = 0;
+		forwardDir.Z = 0;
+		forwardDir.GetSafeNormal(1);
+		forwardDir.Normalize(1);
+		LaunchCharacter(forwardDir * dashSpeed, true, true);
+
+		//Dash won't be able to reset unless has touched the floor
+		hasContactedFloorSinceLastDash = false;
+
+		//Setup Timer
+		timerComplete = false;
+		GetWorld()->GetTimerManager().SetTimer(dashHandler, this, &AGhostRunCharacter::ResetTimerDashDelay, dashDelay, false);
 	}
+	
+}
+
+void AGhostRunCharacter::ResetTimerDashDelay()
+{
+	timerComplete = true;
+}
+
+void AGhostRunCharacter::CheckHasContactedFloorSinceLastDash()
+{
+	if(!GetCharacterMovement()->IsFalling())
+		hasContactedFloorSinceLastDash = true;
 }

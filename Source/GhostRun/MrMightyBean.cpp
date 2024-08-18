@@ -33,3 +33,8 @@ void AMrMightyBean::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 }
 
+void AMrMightyBean::Jumper()
+{
+	UE_LOG(LogTemp, Display, TEXT("Jump button pressed"));
+}
+
