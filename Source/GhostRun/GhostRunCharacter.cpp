@@ -10,6 +10,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Math/UnrealMathUtility.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -72,7 +73,10 @@ void AGhostRunCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	//Check contact with floor to reset dash
 	CheckHasContactedFloorSinceLastDash();
+
+	IsWallSliding();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -93,7 +97,7 @@ void AGhostRunCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 		
 		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AGhostRunCharacter::JumpHandler);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Moving
@@ -108,6 +112,98 @@ void AGhostRunCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	else
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+	}
+}
+
+void AGhostRunCharacter::JumpHandler()
+{
+	if(IsWallSliding())
+	{
+		WallJump();
+	}
+	else
+	{
+		ACharacter::Jump();
+	}
+}
+
+void AGhostRunCharacter::WallJump()
+{
+	//Turn away from wall
+	FRotator currentRotation = GetActorRotation();
+	currentRotation.Yaw += 180;
+	SetActorRotation(currentRotation);
+
+	//launch character off of wall
+	FVector forwardDir = GetActorForwardVector();
+	forwardDir.X = 0;
+	forwardDir.Y = wallJumpVelocityY;
+	forwardDir.Z = wallJumpVelocityZ;
+	LaunchCharacter(forwardDir, true, true);
+}
+
+bool AGhostRunCharacter::IsWallSliding()
+{
+	if(GetCharacterMovement()->IsFalling())
+	{
+		// FHitResult will hold all data returned by our line collision query
+		FHitResult Hit;
+
+		// We set up a line trace from our current location to a point 1000cm ahead of us
+		FVector TraceStart = GetActorLocation();
+		FVector TraceEnd = GetActorLocation() + GetActorForwardVector() * maxWallClingDistance;
+
+		// You can use FCollisionQueryParams to further configure the query
+		// Here we add ourselves to the ignored list so we won't block the trace
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(this);
+
+		// To run the query, you need a pointer to the current level, which you can get from an Actor with GetWorld()
+		// UWorld()->LineTraceSingleByChannel runs a line trace and returns the first actor hit over the provided collision channel.
+		GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, TraceChannelProperty, QueryParams);
+
+		// You can use DrawDebug helpers and the log to help visualize and debug your trace queries.
+		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false, 5.0f, 0, 10.0f);
+		UE_LOG(LogTemp, Log, TEXT("Tracing line: %s to %s"), *TraceStart.ToCompactString(), *TraceEnd.ToCompactString());
+
+		// If the trace hit something, bBlockingHit will be true,
+		// and its fields will be filled with detailed info about what was hit
+		if (Hit.bBlockingHit && IsValid(Hit.GetActor()))
+		{
+			UE_LOG(LogTemp, Log, TEXT("Trace hit actor: %s"), *Hit.GetActor()->GetName());
+
+			//Only slow character and face wall if character is descending
+			if(GetVelocity().Z <= 0)
+			{
+				//Set character to face wall
+				FRotator currentRotation = GetActorRotation();
+				currentRotation.Yaw = Hit.ImpactNormal.Rotation().Yaw + 180;
+				SetActorRotation(currentRotation);
+
+				//Set character wall slide speed
+				FVector currentVelocity = GetVelocity();
+				FVector targetVelocity (currentVelocity.X, currentVelocity.Y, wallSlideSpeed);
+				float DeltaTime = GetWorld()->GetDeltaSeconds();
+				FVector newVelocity = FMath::VInterpConstantTo(currentVelocity, targetVelocity, DeltaTime, wallSlideInterpSpeed);
+				
+				UMovementComponent* MovementComp = GetMovementComponent();
+				if (MovementComp)
+				{
+					MovementComp->Velocity = newVelocity;
+				}
+			}
+
+			return true;
+		}
+		else 
+		{
+			UE_LOG(LogTemp, Log, TEXT("No Actors were hit"));
+			return false;
+		}
+	}
+	else
+	{
+		return false;
 	}
 }
 
@@ -150,11 +246,8 @@ void AGhostRunCharacter::Look(const FInputActionValue& Value)
 
 void AGhostRunCharacter::Dash(const FInputActionValue& Value)
 {
-	UE_LOG(LogTemp, Display, TEXT("Dash button pressed"));
-	UE_LOG(LogTemp, Display, TEXT("Timer Complete: %d, Contacted floor: %d"), timerComplete, hasContactedFloorSinceLastDash);
 	if(timerComplete && hasContactedFloorSinceLastDash)
 	{
-		UE_LOG(LogTemp, Display, TEXT("If statement passed"));
 		//Add dash movement to character
 		FVector forwardDir = GetVelocity();
 		forwardDir.X = 0;

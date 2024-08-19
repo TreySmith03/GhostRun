@@ -63,6 +63,19 @@ protected:
 
 	/** Called for dashing input */
 	void Dash(const FInputActionValue& Value);
+
+	//Reset timer after dashDelay seconds
+	void ResetTimerDashDelay();
+
+	//Verify if character has been in a not falling state since last dash occurred
+	void CheckHasContactedFloorSinceLastDash();
+
+	//Handle floor and wall jumps
+	void JumpHandler();
+
+	bool IsWallSliding();
+
+	void WallJump();
 			
 
 protected:
@@ -72,6 +85,7 @@ protected:
 	// To add mapping context
 	virtual void BeginPlay();
 
+	// Called every frame
 	virtual void Tick(float DeltaTime);
 
 public:
@@ -85,19 +99,32 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Character Movement: Dashing")
 	float dashSpeed = 1000;
 
-	bool canDash;
-
 	UPROPERTY(EditAnywhere, Category = "Character Movement: Dashing")
 	float dashDelay = 1;
+
+	bool canDash;
 
 	FTimerHandle dashHandler;
 
 	bool timerComplete;
 
-	void ResetTimerDashDelay();
-
-	void CheckHasContactedFloorSinceLastDash();
-
 	bool hasContactedFloorSinceLastDash;
+
+	TEnumAsByte<ECollisionChannel> TraceChannelProperty = ECC_Pawn;
+
+	UPROPERTY(EditAnywhere, Category = "Character Movement: Jumping / Falling")
+	float maxWallClingDistance = 50;
+
+	UPROPERTY(EditAnywhere, Category = "Character Movement: Jumping / Falling")
+	float wallSlideInterpSpeed = 1500;
+
+	UPROPERTY(EditAnywhere, Category = "Character Movement: Jumping / Falling")
+	float wallSlideSpeed = -100;
+
+	UPROPERTY(EditAnywhere, Category = "Character Movement: Jumping / Falling")
+	float wallJumpVelocityY = 1200;
+
+	UPROPERTY(EditAnywhere, Category = "Character Movement: Jumping / Falling")
+	float wallJumpVelocityZ = 700;
 };
 
