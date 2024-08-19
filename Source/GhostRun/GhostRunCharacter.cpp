@@ -136,8 +136,10 @@ void AGhostRunCharacter::WallJump()
 
 	//launch character off of wall
 	FVector forwardDir = GetActorForwardVector();
+	forwardDir.GetSafeNormal(1);
+	forwardDir.Normalize(1);
 	forwardDir.X = 0;
-	forwardDir.Y = wallJumpVelocityY;
+	forwardDir.Y *= wallJumpVelocityY;
 	forwardDir.Z = wallJumpVelocityZ;
 	LaunchCharacter(forwardDir, true, true);
 }
