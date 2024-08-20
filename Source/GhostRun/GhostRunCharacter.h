@@ -46,7 +46,9 @@ class AGhostRunCharacter : public ACharacter
 
 	/* Dash Input Action*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* DashAction;
+	UInputAction* DashStationaryAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* DashMovingAction;
 
 public:
 	AGhostRunCharacter();
@@ -62,13 +64,15 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 	/** Called for dashing input */
-	void Dash(const FInputActionValue& Value);
+	void DashStationary(const FInputActionValue& Value);
+	void DashMoving(const FInputActionValue& Value);
+	void DashHandler(FVector dashDirection);
 
 	//Reset timer after dashDelay seconds
 	void ResetTimerDashDelay();
 
 	//Verify if character has been in a not falling state since last dash occurred
-	void CheckHasContactedFloorSinceLastDash();
+	void ResetMovementSkillsOnFloorContact();
 
 	//Handle floor and wall jumps
 	void JumpHandler();
@@ -96,6 +100,8 @@ public:
 
 private:
 
+	FVector2D MovementVector;
+
 	UPROPERTY(EditAnywhere, Category = "Character Movement: Dashing")
 	float dashSpeed = 1000;
 
@@ -109,6 +115,7 @@ private:
 	bool timerComplete;
 
 	bool hasContactedFloorSinceLastDash;
+	bool hasContactedFloorSinceLastWallJump;
 
 	TEnumAsByte<ECollisionChannel> TraceChannelProperty = ECC_Pawn;
 

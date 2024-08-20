@@ -56,6 +56,9 @@ AGhostRunCharacter::AGhostRunCharacter()
 	timerComplete = true;
 	hasContactedFloorSinceLastDash = true;
 
+	//Configure for wall jump
+	hasContactedFloorSinceLastWallJump = true;
+
 	//Configure Tick
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -74,7 +77,7 @@ void AGhostRunCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	//Check contact with floor to reset dash
-	CheckHasContactedFloorSinceLastDash();
+	ResetMovementSkillsOnFloorContact();
 
 	IsWallSliding();
 }
@@ -107,7 +110,8 @@ void AGhostRunCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGhostRunCharacter::Look);
 
 		// Dashing
-		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AGhostRunCharacter::Dash);
+		EnhancedInputComponent->BindAction(DashStationaryAction, ETriggerEvent::Started, this, &AGhostRunCharacter::DashStationary);
+		EnhancedInputComponent->BindAction(DashMovingAction, ETriggerEvent::Started, this, &AGhostRunCharacter::DashMoving);
 	}
 	else
 	{
@@ -119,7 +123,10 @@ void AGhostRunCharacter::JumpHandler()
 {
 	if(IsWallSliding())
 	{
-		WallJump();
+		if(hasContactedFloorSinceLastWallJump)
+		{
+			WallJump();
+		}
 	}
 	else
 	{
@@ -142,6 +149,8 @@ void AGhostRunCharacter::WallJump()
 	forwardDir.Y *= wallJumpVelocityY;
 	forwardDir.Z = wallJumpVelocityZ;
 	LaunchCharacter(forwardDir, true, true);
+
+	hasContactedFloorSinceLastWallJump = false;
 }
 
 bool AGhostRunCharacter::IsWallSliding()
@@ -166,13 +175,11 @@ bool AGhostRunCharacter::IsWallSliding()
 
 		// You can use DrawDebug helpers and the log to help visualize and debug your trace queries.
 		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false, 5.0f, 0, 10.0f);
-		UE_LOG(LogTemp, Log, TEXT("Tracing line: %s to %s"), *TraceStart.ToCompactString(), *TraceEnd.ToCompactString());
 
 		// If the trace hit something, bBlockingHit will be true,
 		// and its fields will be filled with detailed info about what was hit
 		if (Hit.bBlockingHit && IsValid(Hit.GetActor()))
 		{
-			UE_LOG(LogTemp, Log, TEXT("Trace hit actor: %s"), *Hit.GetActor()->GetName());
 
 			//Only slow character and face wall if character is descending
 			if(GetVelocity().Z <= 0)
@@ -199,7 +206,6 @@ bool AGhostRunCharacter::IsWallSliding()
 		}
 		else 
 		{
-			UE_LOG(LogTemp, Log, TEXT("No Actors were hit"));
 			return false;
 		}
 	}
@@ -212,7 +218,7 @@ bool AGhostRunCharacter::IsWallSliding()
 void AGhostRunCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
+	MovementVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr)
 	{
@@ -246,17 +252,34 @@ void AGhostRunCharacter::Look(const FInputActionValue& Value)
 	// }
 }
 
-void AGhostRunCharacter::Dash(const FInputActionValue& Value)
+//Prepares dash when stationary. Sends them in direction model is facing.
+void AGhostRunCharacter::DashStationary(const FInputActionValue& Value)
+{
+	FVector forwardDir = GetActorForwardVector();
+	forwardDir.X = 0;
+	forwardDir.Z = 0;
+	forwardDir.GetSafeNormal(1);
+	forwardDir.Normalize(1);
+
+	DashHandler(forwardDir);
+}
+
+//Prepares dash in direction of input
+void AGhostRunCharacter::DashMoving(const FInputActionValue& Value)
+{
+	FVector forwardDir = {0., MovementVector.X, 0.};
+	
+	DashHandler(forwardDir);
+}
+
+//Accepts dash direction and applies launch
+void AGhostRunCharacter::DashHandler(FVector dashDirection)
 {
 	if(timerComplete && hasContactedFloorSinceLastDash)
 	{
 		//Add dash movement to character
-		FVector forwardDir = GetVelocity();
-		forwardDir.X = 0;
-		forwardDir.Z = 0;
-		forwardDir.GetSafeNormal(1);
-		forwardDir.Normalize(1);
-		LaunchCharacter(forwardDir * dashSpeed, true, true);
+		
+		LaunchCharacter(dashDirection * dashSpeed, true, true);
 
 		//Dash won't be able to reset unless has touched the floor
 		hasContactedFloorSinceLastDash = false;
@@ -265,7 +288,6 @@ void AGhostRunCharacter::Dash(const FInputActionValue& Value)
 		timerComplete = false;
 		GetWorld()->GetTimerManager().SetTimer(dashHandler, this, &AGhostRunCharacter::ResetTimerDashDelay, dashDelay, false);
 	}
-	
 }
 
 void AGhostRunCharacter::ResetTimerDashDelay()
@@ -273,8 +295,12 @@ void AGhostRunCharacter::ResetTimerDashDelay()
 	timerComplete = true;
 }
 
-void AGhostRunCharacter::CheckHasContactedFloorSinceLastDash()
+//Reset all movement skills after character has made contact with the floor.
+void AGhostRunCharacter::ResetMovementSkillsOnFloorContact()
 {
 	if(!GetCharacterMovement()->IsFalling())
+	{
 		hasContactedFloorSinceLastDash = true;
+		hasContactedFloorSinceLastWallJump = true;
+	}
 }
