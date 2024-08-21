@@ -6,7 +6,7 @@
             "cStandard": "c17",
             "cppStandard": "c++20",
             "intelliSenseMode": "msvc-x64",
-            "compileCommands": "C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\.vscode\\compileCommands_GhostRun.json"
+            "compileCommands": "D:\\PersonalProjects\\Unreal Projects\\GhostRun\\.vscode\\compileCommands_GhostRun.json"
         },
         {
             "name": "Win32",
@@ -14,7 +14,7 @@
             "cStandard": "c17",
             "cppStandard": "c++20",
             "intelliSenseMode": "msvc-x64",
-            "compileCommands": "C:\\Users\\Trey\\Documents\\Unreal Projects\\GhostRun\\.vscode\\compileCommands_Default.json"
+            "compileCommands": "D:\\PersonalProjects\\Unreal Projects\\GhostRun\\.vscode\\compileCommands_Default.json"
         }
     ],
     "version": 4

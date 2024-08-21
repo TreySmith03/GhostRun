@@ -53,6 +53,7 @@ AGhostRunCharacter::AGhostRunCharacter()
 
 	// Configure for dashes
 	canDash = true;
+	isDashing = false;
 	timerComplete = true;
 	hasContactedFloorSinceLastDash = true;
 
@@ -128,6 +129,10 @@ void AGhostRunCharacter::JumpHandler()
 			WallJump();
 		}
 	}
+	else if(isDashing && OnGround())
+	{
+		SpringBoardJump();
+	}
 	else
 	{
 		ACharacter::Jump();
@@ -153,32 +158,23 @@ void AGhostRunCharacter::WallJump()
 	hasContactedFloorSinceLastWallJump = false;
 }
 
+void AGhostRunCharacter::SpringBoardJump()
+{
+	FVector forwardDir = {0., MovementVector.X * springBoardJumpVelocityY, springBoardJumpVelocityZ};
+
+	StopDashing();
+	LaunchCharacter(forwardDir, true, true);
+}
+
 bool AGhostRunCharacter::IsWallSliding()
 {
-	if(GetCharacterMovement()->IsFalling())
+	if(!OnGround())
 	{
-		// FHitResult will hold all data returned by our line collision query
-		FHitResult Hit;
-
-		// We set up a line trace from our current location to a point 1000cm ahead of us
-		FVector TraceStart = GetActorLocation();
-		FVector TraceEnd = GetActorLocation() + GetActorForwardVector() * maxWallClingDistance;
-
-		// You can use FCollisionQueryParams to further configure the query
-		// Here we add ourselves to the ignored list so we won't block the trace
-		FCollisionQueryParams QueryParams;
-		QueryParams.AddIgnoredActor(this);
-
-		// To run the query, you need a pointer to the current level, which you can get from an Actor with GetWorld()
-		// UWorld()->LineTraceSingleByChannel runs a line trace and returns the first actor hit over the provided collision channel.
-		GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, TraceChannelProperty, QueryParams);
-
-		// You can use DrawDebug helpers and the log to help visualize and debug your trace queries.
-		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false, 5.0f, 0, 10.0f);
-
 		// If the trace hit something, bBlockingHit will be true,
 		// and its fields will be filled with detailed info about what was hit
-		if (Hit.bBlockingHit && IsValid(Hit.GetActor()))
+		FHitResult hit = ContactWithTerrainCheck(GetActorForwardVector(), maxWallClingDistance);
+
+		if (hit.bBlockingHit && IsValid(hit.GetActor()))
 		{
 
 			//Only slow character and face wall if character is descending
@@ -186,7 +182,7 @@ bool AGhostRunCharacter::IsWallSliding()
 			{
 				//Set character to face wall
 				FRotator currentRotation = GetActorRotation();
-				currentRotation.Yaw = Hit.ImpactNormal.Rotation().Yaw + 180;
+				currentRotation.Yaw = hit.ImpactNormal.Rotation().Yaw + 180;
 				SetActorRotation(currentRotation);
 
 				//Set character wall slide speed
@@ -258,6 +254,11 @@ void AGhostRunCharacter::DashStationary(const FInputActionValue& Value)
 	FVector forwardDir = GetActorForwardVector();
 	forwardDir.X = 0;
 	forwardDir.Z = 0;
+	if(forwardDir.Y >= 0)
+		forwardDir.Y = 1;
+	else
+		forwardDir.Y = -1;
+
 	forwardDir.GetSafeNormal(1);
 	forwardDir.Normalize(1);
 
@@ -277,17 +278,30 @@ void AGhostRunCharacter::DashHandler(FVector dashDirection)
 {
 	if(timerComplete && hasContactedFloorSinceLastDash)
 	{
+		//Prevents friction and gravity to have consistent dash
+		GetCharacterMovement()->BrakingFrictionFactor = 0.0f;
+		GetCharacterMovement()->GravityScale = 0.0f;
+
 		//Add dash movement to character
-		
 		LaunchCharacter(dashDirection * dashSpeed, true, true);
 
 		//Dash won't be able to reset unless has touched the floor
 		hasContactedFloorSinceLastDash = false;
 
+		isDashing = true;
+
 		//Setup Timer
 		timerComplete = false;
-		GetWorld()->GetTimerManager().SetTimer(dashHandler, this, &AGhostRunCharacter::ResetTimerDashDelay, dashDelay, false);
+		GetWorldTimerManager().SetTimer(dashDurationTimerHandler, this, &AGhostRunCharacter::StopDashing, dashDuration, false);
+		GetWorld()->GetTimerManager().SetTimer(dashResetTimerHandler, this, &AGhostRunCharacter::ResetTimerDashDelay, dashDelay, false);
 	}
+}
+
+void AGhostRunCharacter::StopDashing()
+{
+	GetCharacterMovement()->BrakingFrictionFactor = 2.0f;
+	GetCharacterMovement()->GravityScale = 1.0f;
+	isDashing = false;
 }
 
 void AGhostRunCharacter::ResetTimerDashDelay()
@@ -298,9 +312,46 @@ void AGhostRunCharacter::ResetTimerDashDelay()
 //Reset all movement skills after character has made contact with the floor.
 void AGhostRunCharacter::ResetMovementSkillsOnFloorContact()
 {
-	if(!GetCharacterMovement()->IsFalling())
+	if(OnGround())
 	{
 		hasContactedFloorSinceLastDash = true;
 		hasContactedFloorSinceLastWallJump = true;
 	}
+}
+
+FHitResult AGhostRunCharacter::ContactWithTerrainCheck(FVector direction, float distance)
+{
+	// FHitResult will hold all data returned by our line collision query
+		FHitResult Hit;
+
+		// We set up a line trace from our current location to a point 1000cm ahead of us
+		FVector TraceStart = GetActorLocation();
+		FVector TraceEnd = GetActorLocation() + direction * distance;
+
+		// You can use FCollisionQueryParams to further configure the query
+		// Here we add ourselves to the ignored list so we won't block the trace
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(this);
+
+		// To run the query, you need a pointer to the current level, which you can get from an Actor with GetWorld()
+		// UWorld()->LineTraceSingleByChannel runs a line trace and returns the first actor hit over the provided collision channel.
+		GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, TraceChannelProperty, QueryParams);
+
+		// You can use DrawDebug helpers and the log to help visualize and debug your trace queries.
+		// DrawDebugLine(GetWorld(), TraceStart, TraceEnd, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false, 5.0f, 0, 10.0f);
+
+		// If the trace hit something, bBlockingHit will be true,
+		// and its fields will be filled with detailed info about what was hit
+		return Hit;
+}
+
+bool AGhostRunCharacter::OnGround()
+{
+	//Contact with floor
+	FHitResult hit = ContactWithTerrainCheck(GetActorUpVector() * -1, maxContactFloorDistance);
+	
+	if (hit.bBlockingHit && IsValid(hit.GetActor()))
+		return true;
+	else
+		return false;
 }

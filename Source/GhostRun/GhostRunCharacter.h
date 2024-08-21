@@ -67,6 +67,7 @@ protected:
 	void DashStationary(const FInputActionValue& Value);
 	void DashMoving(const FInputActionValue& Value);
 	void DashHandler(FVector dashDirection);
+	void StopDashing();
 
 	//Reset timer after dashDelay seconds
 	void ResetTimerDashDelay();
@@ -76,10 +77,12 @@ protected:
 
 	//Handle floor and wall jumps
 	void JumpHandler();
-
 	bool IsWallSliding();
-
 	void WallJump();
+	void SpringBoardJump();
+
+	FHitResult ContactWithTerrainCheck(FVector direction, float distance);
+	bool OnGround();
 			
 
 protected:
@@ -103,14 +106,18 @@ private:
 	FVector2D MovementVector;
 
 	UPROPERTY(EditAnywhere, Category = "Character Movement: Dashing")
-	float dashSpeed = 1000;
+	float dashSpeed = 2000;
 
 	UPROPERTY(EditAnywhere, Category = "Character Movement: Dashing")
 	float dashDelay = 1;
 
-	bool canDash;
+	UPROPERTY(EditAnywhere, Category = "Character Movement: Dashing")
+	float dashDuration = .25;
 
-	FTimerHandle dashHandler;
+	bool canDash;
+	bool isDashing;
+	FTimerHandle dashResetTimerHandler;
+	FTimerHandle dashDurationTimerHandler;
 
 	bool timerComplete;
 
@@ -118,6 +125,9 @@ private:
 	bool hasContactedFloorSinceLastWallJump;
 
 	TEnumAsByte<ECollisionChannel> TraceChannelProperty = ECC_Pawn;
+
+	UPROPERTY(EditAnywhere, Category = "Character Movement")
+	float maxContactFloorDistance = 100;
 
 	UPROPERTY(EditAnywhere, Category = "Character Movement: Jumping / Falling")
 	float maxWallClingDistance = 50;
@@ -133,5 +143,11 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Character Movement: Jumping / Falling")
 	float wallJumpVelocityZ = 700;
+
+	UPROPERTY(EditAnywhere, Category = "Character Movement: Jumping / Falling")
+	float springBoardJumpVelocityY = 2000;
+
+	UPROPERTY(EditAnywhere, Category = "Character Movement: Jumping / Falling")
+	float springBoardJumpVelocityZ = 1000;
 };
 
