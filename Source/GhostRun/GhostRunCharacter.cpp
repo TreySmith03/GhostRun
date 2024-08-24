@@ -39,6 +39,8 @@ AGhostRunCharacter::AGhostRunCharacter()
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+	GetCharacterMovement()->GravityScale = playerGravity;
+	GetCharacterMovement()->JumpZVelocity = jumpVelocityZ;
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -300,7 +302,7 @@ void AGhostRunCharacter::DashHandler(FVector dashDirection)
 void AGhostRunCharacter::StopDashing()
 {
 	GetCharacterMovement()->BrakingFrictionFactor = 2.0f;
-	GetCharacterMovement()->GravityScale = 1.0f;
+	GetCharacterMovement()->GravityScale = playerGravity;
 	isDashing = false;
 }
 

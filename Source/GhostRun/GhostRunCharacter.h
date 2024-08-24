@@ -129,6 +129,12 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Character Movement")
 	float maxContactFloorDistance = 100;
 
+	UPROPERTY(EditAnywhere, Category = "Character Movement")
+	float playerGravity = 2.0;
+	
+	UPROPERTY(EditAnywhere, Category = "Character Movement: Jumping / Falling")
+	float jumpVelocityZ = 1000;
+
 	UPROPERTY(EditAnywhere, Category = "Character Movement: Jumping / Falling")
 	float maxWallClingDistance = 50;
 
@@ -136,13 +142,13 @@ private:
 	float wallSlideInterpSpeed = 1500;
 
 	UPROPERTY(EditAnywhere, Category = "Character Movement: Jumping / Falling")
-	float wallSlideSpeed = -100;
+	float wallSlideSpeed = 0;
 
 	UPROPERTY(EditAnywhere, Category = "Character Movement: Jumping / Falling")
 	float wallJumpVelocityY = 1200;
 
 	UPROPERTY(EditAnywhere, Category = "Character Movement: Jumping / Falling")
-	float wallJumpVelocityZ = 700;
+	float wallJumpVelocityZ = 1000;
 
 	UPROPERTY(EditAnywhere, Category = "Character Movement: Jumping / Falling")
 	float springBoardJumpVelocityY = 2000;
